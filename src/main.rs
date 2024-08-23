@@ -7,19 +7,43 @@ use frankenstein::{Api, UpdateContent};
 
 // AI libraries
 
-use genai::cliet::Client;
-use genai::utils::print_chaat_stream;
+use genai::chat::ChatStreamResponse;
+use genai::chat::{ChatMessage, ChatRequest};
+use genai::client::Client;
+use genai::utils::print_chat_stream;
 
-#[tokio::aiagent]
-fn aiagent(query:str) -> Result <(), Box< dyn std::error::Error>>{
+// Error Imports
+
+use std::error::Error;
 
 
+// API KEY FOR GOOGLE GEMINI - AIzaSyCwyOBjVVAnLWWSUbyv7hyuBRMwyaPNYQI
+
+
+async fn aiagent(query:String) -> Result<(), Box<dyn Error>> {
+
+    println!("hello world");
+    let client = Client::default();
+    let chat_req = ChatRequest::new(vec![
+        // --Message
+        ChatMessage::system("Reply as a crypto wizard for a blockchain called Core blockchain.
+        Your name is coreant"),
+        ChatMessage::user("{query:?}"),
+    ]);
+
+    let model = "gemini-1.5-flash-latest"; 
+
+    println!("\n -- Answer from (from {model})"); 
+    let chat_res= client.exec_chat(model, chat_req, None).await?;
+    print_chat_stream(ChatStreamResponse,None).await?;
+    Ok(())
 
 }
 
-static TOKEN: &str = "7307718073:AAGnrKemRXyDBJhZQftukezkdWiaf0QcF3U";
+static TOKEN: &str = "";
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let api = Api::new(TOKEN);
 
     let update_params_builder = GetUpdatesParams::builder();
@@ -39,6 +63,13 @@ fn main() {
 
                     // Getting the message object from looped parameters
                     if let UpdateContent::Message(message) = update.content {
+
+
+                        if let Some(text) = message.text.clone(){
+                            println!("Text:{}",text);
+                            aiagent(text);
+
+                        }
 
                         // Abstracting the sent message instance for future reply
                         let reply_parameters = ReplyParameters::builder()
